@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from pages.home_page import HomePage
 from pages.flights_page import FlightsPage
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Captcha in CI, run manually")
+
 def test_flights_search_and_redirect(browser):
     """Тест поиска авиабилетов и редиректа на S7"""
     page = browser
