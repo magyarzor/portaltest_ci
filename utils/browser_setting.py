@@ -1,46 +1,35 @@
-from playwright.sync_api import sync_playwright
 import os
+from playwright.sync_api import sync_playwright
 
 PROFILE_DIR = os.path.expanduser("~/playwright-profile")
 HEADLESS = os.getenv("HEADLESS", "false").lower() == "true"
 
 def start_browser():
-    """Запускает браузер с сохранением профиля"""
     playwright = sync_playwright().start()
     context = playwright.chromium.launch_persistent_context(
         user_data_dir=PROFILE_DIR,
-        headless=HEADLESS,
+        headless=HEADLESS,  # 👈 теперь управляется через переменную
         channel="chrome",
         ignore_default_args=["--enable-automation"],
         args=[
             "--disable-blink-features=AutomationControlled",
-            "--disable-infobars"                              
+            "--disable-infobars",
+            "--no-sandbox",
+            "--disable-dev-shm-usage"
         ]
     )
-    # 👇 МАСКИРУЕМ БОТА
+    
+    # Маскировка бота
     context.add_init_script("""
-        // Убираем webdriver
-        Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined
-        });
-        
-        // Добавляем chrome (если нет)
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
         window.chrome = window.chrome || {};
-        
-        // Маскируем languages
-        Object.defineProperty(navigator, 'languages', {
-            get: () => ['ru-RU', 'ru', 'en-US', 'en']
-        });
-        
-        // Маскируем plugins
-        Object.defineProperty(navigator, 'plugins', {
-            get: () => [1, 2, 3, 4, 5]
-        });
+        Object.defineProperty(navigator, 'languages', { get: () => ['ru-RU', 'ru'] });
+        Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
     """)
+    
     page = context.pages[0] if context.pages else context.new_page()
     return playwright, context, page
 
 def close_browser(playwright, context):
-    """Закрывает браузер"""
     context.close()
     playwright.stop()
