@@ -11,7 +11,6 @@ from pages.flights_page import FlightsPage
 def test_flights_search_and_redirect(browser):
     """Тест поиска авиабилетов и редиректа на S7"""
     page = browser
-    
     home = HomePage(page).open()
     home.click_flights_tab()
     
